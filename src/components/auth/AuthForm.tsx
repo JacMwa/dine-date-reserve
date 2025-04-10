@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 export type AuthFormProps = {
   mode: "login" | "register";
@@ -16,6 +17,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [name, setName] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,23 +28,35 @@ export function AuthForm({ mode }: AuthFormProps) {
     if (mode === "login") {
       // Simulate login
       if (email && password) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("user", JSON.stringify({ email, name: "Guest" }));
+        // Determine if admin based on email
+        const isAdmin = email.toLowerCase() === "admin@restaurant.com";
+        
+        // Use the AuthContext login function
+        login(email, isAdmin ? "Admin User" : "Guest User");
+        
         toast({
           title: "Login Successful",
           description: "Welcome back to Le Bistro!",
         });
-        navigate("/dashboard");
+        
+        // Redirect based on role
+        if (isAdmin) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } else {
       // Simulate registration
       if (email && password && name) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("user", JSON.stringify({ email, name }));
+        // Use the AuthContext login function
+        login(email, name);
+        
         toast({
           title: "Registration Successful",
           description: "Welcome to Le Bistro!",
         });
+        
         navigate("/dashboard");
       }
     }
